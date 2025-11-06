@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>你知道什麼是噹噹噹噹</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* 設定字體和基本的網頁樣式 */
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      /* 定義播放中的按鈕樣式 */
+      .playing {
+        /* 播放中的顏色變為綠色，並增加脈衝動畫提示 */
+        background-color: #10b981; /* green-500 */
+        border-color: #059669; /* green-600 */
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); /* green-500 with opacity */
+        }
+        50% {
+          box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="text-center w-full max-w-4xl">
+      <div class="grid grid-cols-2 gap-8 justify-items-center">
+        <button
+          id="btn_laugh_small"
+          data-audio="audio_laugh_small"
+          class="sound-button w-full max-w-none bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white font-black p-8 sm:p-12 shadow-xl transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-500 focus:ring-opacity-50 text-base sm:text-lg border-4 border-yellow-700"
+        >
+          多人笑聲
+        </button>
+
+        <button
+          id="btn_laugh_big"
+          data-audio="audio_laugh_big"
+          class="sound-button w-full max-w-none bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-black p-8 sm:p-12 shadow-xl transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-500 focus:ring-opacity-50 text-base sm:text-lg border-4 border-orange-700"
+        >
+          笑聲
+        </button>
+
+        <button
+          id="btn_clap_small"
+          data-audio="audio_clap_small"
+          class="sound-button w-full max-w-none bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-black p-8 sm:p-12 shadow-xl transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 text-base sm:text-lg border-4 border-blue-700"
+        >
+          掌聲
+        </button>
+
+        <button
+          id="btn_clap_big"
+          data-audio="audio_clap_big"
+          class="sound-button w-full max-w-none bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white font-black p-8 sm:p-12 shadow-xl transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 text-base sm:text-lg border-4 border-indigo-700"
+        >
+          掌聲+尖叫
+        </button>
+
+        <button
+          id="btn_cheer"
+          data-audio="audio_cheer"
+          class="sound-button bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-black p-8 sm:p-12 shadow-xl transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50 text-base sm:text-lg border-4 border-red-700 w-full max-w-none col-span-2 justify-self-center"
+        >
+          歡樂音樂
+        </button>
+      </div>
+    </div>
+
+    <audio id="audio_laugh_small" src="laugh1.mp3" preload="auto"></audio>
+    <audio id="audio_laugh_big" src="laugh2.mp3" preload="auto"></audio>
+    <audio id="audio_clap_small" src="laugh3.mp3" preload="auto"></audio>
+    <audio id="audio_clap_big" src="laugh4.mp3" preload="auto"></audio>
+    <audio id="audio_cheer" src="laugh5.mp3" preload="auto"></audio>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // 取得所有按鈕和音訊元素
+        const buttons = document.querySelectorAll(".sound-button");
+        const allAudios = document.querySelectorAll("audio");
+
+        // 追蹤當前正在播放的音效，確保一次只有一個在播放
+        let currentPlayingAudio = null;
+        let currentPlayingButton = null;
+
+        /**
+         * 停止所有音效的播放，並重置其狀態。
+         */
+        const stopAllAudios = () => {
+          allAudios.forEach((audio) => {
+            // 暫停音效
+            audio.pause();
+            // 重設播放時間到開頭
+            audio.currentTime = 0;
+          });
+          // 移除所有按鈕的 'playing' 樣式
+          buttons.forEach((button) => {
+            button.classList.remove("playing");
+          });
+          currentPlayingAudio = null;
+          currentPlayingButton = null;
+        };
+
+        /**
+         * 處理按鈕點擊事件 (播放/暫停邏輯)。
+         * @param {HTMLElement} button - 被點擊的按鈕元素。
+         * @param {HTMLAudioElement} audio - 對應的音訊元素。
+         */
+        const togglePlayPause = (button, audio) => {
+          // 檢查：如果點擊的是當前正在播放的按鈕
+          if (audio === currentPlayingAudio) {
+            // 執行暫停操作
+            stopAllAudios();
+            return; // 結束函式
+          }
+
+          // 檢查：如果有其他音效正在播放，先停止它們
+          if (currentPlayingAudio) {
+            stopAllAudios();
+          }
+
+          // 執行播放操作
+          try {
+            // 將音訊重設到開頭，確保從頭播放
+            audio.currentTime = 0;
+            audio.play();
+
+            // 更新追蹤變數和按鈕樣式
+            currentPlayingAudio = audio;
+            currentPlayingButton = button;
+            button.classList.add("playing");
+
+            // 監聽音效播放結束事件，結束後自動重設狀態
+            audio.onended = () => {
+              button.classList.remove("playing");
+              if (audio === currentPlayingAudio) {
+                currentPlayingAudio = null;
+                currentPlayingButton = null;
+              }
+              audio.currentTime = 0; // 準備下次播放
+            };
+          } catch (error) {
+            console.error(
+              "音效播放失敗，可能是因為瀏覽器的自動播放政策：",
+              error
+            );
+            // 顯示錯誤或提示給使用者
+          }
+        };
+
+        // 為所有音效按鈕添加點擊事件監聽器
+        buttons.forEach((button) => {
+          button.addEventListener("click", () => {
+            // 取得按鈕 data-audio 屬性中對應的音訊 ID
+            const audioId = button.getAttribute("data-audio");
+            const audio = document.getElementById(audioId);
+
+            if (audio) {
+              togglePlayPause(button, audio);
+            } else {
+              console.error(`找不到 ID 為 ${audioId} 的音訊元素！`);
+            }
+          });
+        });
+
+        // 開發者提醒
+        allAudios.forEach((audio) => {
+          // networkState === 3 表示找不到資源
+          if (audio.networkState === 3) {
+            console.warn(
+              `注意：音效檔案 '${audio.src
+                .split("/")
+                .pop()}' 可能尚未放置在正確的位置。請確認檔名和路徑是否正確！`
+            );
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
